@@ -3,57 +3,121 @@
 
 import requests as req
 
-print("1. *Введите URL.")
-print("2. *Введите имя папки.")
-parseMethod = str(input())
+class Parse:
+	"""
+	Documentation:
+	Example:
 
-def parseUrl():
-	print("В каком расширении сохранить спарсенную страницу? *Пример: html или txt, писать расширение без точки.")
-	code = str(input(": "))
-	parseUrl = str(input("URL: "))
-	isHttp = "https://"
+	-----------------------------
+	| Parse(method, link, type) |
+	-----------------------------
+	
+	--------
+	method:
+	1. URL
+	2. file:///PATH/to/folder
+	*INPUT ONLY NUMBER IN STRING FORMAT
+	--------
+	link:
+	- file:///PATH/to/folder/filename
+	- C:/PATH/to/folder/filename
+	- /path/to/folder/filename
+	----
+	- https://site.type
+	- site.type
+	--------
+	type:
+	- txt
+	- html
+	- php
+	- py
+	- and other
+	*INPUT WITHOUT '.'(DOT)
+	"""
 
-	if isHttp in parseUrl:
-		pass
+	def __init__(self, method, link, format):
 
-	else:
-		parseUrl = str(isHttp) + str(parseUrl)
+		if method == "1":
+			self.parseUrl(link, format)
 
-	r = req.get("%s" % parseUrl)
-	parseHtmlElements(r, code)
+		elif method == "2":
+			self.parseUrlFromFile(link, format)
 
-def parseUrlFromFile():
-	print("В каком расширении сохранить спарсенную страницу? *Пример: html или txt, писать расширение без точки.")
-	code = str(input(": "))
-	parseUrlsInFile = str(input("File name: "))
-	parseUrlsList = []
-	fileOpen = open("%s" % parseUrlsInFile, "r")
-	fileRead = fileOpen.read()
-	parseUrlsList = fileRead.split(" ")
-	parseUrlsList = [line.rstrip("\n") for line in parseUrlsList] 
-	fileOpen.close()
-	n = 0
-	for link in parseUrlsList:
-		n += 1
-		r = req.get(link)
-		parseMoreHtmlElements(r, n, code)
+		else:
+			self.out(str("Error: " + method + "Нет такого метода."))
 
 
-def parseHtmlElements(a, b):
-	fileOpen = open("parseHtmlPage.%s" % b, "w")
-	fileOpen.write(a.text)
-	fileOpen.close()
+	def docs():
+		info = """
+			Documentation:
+			Example:
 
-def parseMoreHtmlElements(a, b, c):
-	fileOpen = open("parseHtmlPage%s.%s" % (b, c), "w")
-	fileOpen.write(a.text)
-	fileOpen.close()
+			-----------------------------
+			| Parse(method, link, type) |
+			-----------------------------
+			
+			--------
+			method:
+			1. URL
+			2. file:///PATH/to/folder
+			*INPUT ONLY NUMBER
+			--------
+			link:
+			- file:///PATH/to/folder
+			- C:/PATH/to/folder
+			- /path/to/folder
+			----
+			- https://site.type
+			- site.type
+			--------
+			type:
+			- txt
+			- html
+			- php
+			- py
+			- and other
+			*INPUT WITHOUT '.'(DOT)
+				"""
+		return info	
 
-if parseMethod == "1":
-	parseUrl()
 
-elif parseMethod == "2":
-	parseUrlFromFile()
+	def out(self, content):
+		return content
 
-else:
-	print("Error: " + parseMethod + "Нет такого метода.")
+
+	def parseUrl(self, url, format):
+		code = format
+		parseUrl = url
+		isHttp = "https://"
+
+		if isHttp in parseUrl != True:
+			parseUrl = str(isHttp) + str(parseUrl)
+
+		r = req.get("%s" % parseUrl)
+		self.parseHtmlElements(r, code)
+
+
+	def parseUrlFromFile(self, url, format):
+		code = format
+		parseUrlsInFile = url
+		parseUrlsList = list()
+		with open("%s" % parseUrlsInFile, "r") as fileOpen:
+			fileRead = fileOpen.read()
+			parseUrlsList = fileRead.split(" ")
+			parseUrlsList = [line.rstrip("\n") for line in parseUrlsList] 
+		n = 0
+		for link in parseUrlsList:
+			n += 1
+			r = req.get(link)
+			self.parseMoreHtmlElements(r, n, code)
+
+
+	def parseHtmlElements(self, a, b):
+		with open("parseHtmlPage.%s" % b, "w", encoding='utf-8') as fileOpen:
+			fileOpen.write(a.text)
+
+	def parseMoreHtmlElements(self, a, b, c):
+		with open("parseHtmlPage%s.%s" % (b, c), "a", encoding='utf-8') as fileOpen:
+			fileOpen.write(a.text)
+
+print(Parse.docs())
