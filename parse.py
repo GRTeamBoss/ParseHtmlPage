@@ -9,62 +9,109 @@ class Parse:
 	URI = 'https://www.'
 
 
-	def __init__(self, method: str, link: str, EXTENSION = 'txt', GET_MODE = 'text', GET_ARGS = '') -> None:
+	def __init__(self, method: str, link: str, EXTENSION = 'txt', GET_MODE = 'text') -> None:
 
 		self.EXTENSION = EXTENSION
 		self.GET_MODE = GET_MODE
-		self.GET_ARGS = GET_ARGS
 
 		callback_function = {
 			'1': self.get_URL_content,
-			'2': '',
+			'2': self.get_PATH_content,
 		}
 		callback_function[method](link)
 
 
 	def content_modify(self, arg):
 		data_modify = list()
+
 		for el in arg:
 			data_modify.append(el.lstrip().rstrip())
-		return data_modify
 
-
-	def find_component(self, data):
-		if self.GET_ARGS == '':
-			result = '\n'.join(data)
-			return result
-		if type(self.GET_ARGS) == type(str()):
-			pass
-		if type(self.GET_ARGS) == type(list()):
-			args_tag = filter(lambda tag: '#' not in tag and '.' not in tag, self.GET_ARGS)
-			args_starts_lattice = filter(lambda lattice: lattice.startswith('#'), self.GET_ARGS)
-			args_starts_dote = filter(lambda dote: dote.startswith('.'), self.GET_ARGS)
-			
-			
+		return data_modify			
 	
 
-	def find_tag(self):
-		data_start_tag = list()
-		data_end_tag = list()
+	def find_tag(data, tag):
+		data_tag = list([],[])
+		data_find = list()
 
-		try:
-			for i in data:
-				if any((f'<{self.GET_ARGS}>', f'<{self.GET_ARGS}')) in i:
-					data_start_tag.append(i)
-				if f'</{self.GET_ARGS}>' in i:
-					data_end_tag.append(i)
+		if f'</{tag}>' not in data:
 
-		except Exception as e:
-			pass
+			try:
+
+				for num in range(len(data)):
+
+					if f'<{tag}>' in data[num] or f'<{tag}' in data[num]:
+						data_tag[0].append(num)
+						data_tag[1].append(data[num])
+
+				for element in data_tag[1]:
+
+					if f'<{tag}' in element or f'<{tag}>' in element:
+						_temp_start_tag = data_tag[1].index(element)
+
+					if '>' in element and f'<{tag}' not in element and f'<{tag}>' not in element:
+						_temp_end_tag = data_tag[1].index(element)
+
+						_temp_content = list()
+
+						for el in data[int(_temp_start_tag) + 1 : int(_temp_end_tag)]:
+							_temp_content.append(el)
+
+						data_find.append(data[_temp_start_tag] + _temp_content + data[_temp_end_tag])
+				return data_find
+
+			except Exception as e:
+				return e
+
+		else:
+
+			try:
+
+				for num in range(len(data)):
+
+					if f'<{tag}>' in data[num] or f'<{tag}' in data[num] or f'</{tag}>' in data[num]:
+						data_tag[0].append(num)
+						data_tag[1].append(data[num])
+
+				for element in data_tag[1]:
+
+					if f'<{tag}' in element or f'<{tag}>' in element:
+						_temp_start_tag = data_tag[1].index(element)
+
+					if f'</{tag}>' in element:
+						_temp_end_tag = data_tag[1].index(element)
+
+						_temp_content = list()
+
+						for el in data[int(_temp_start_tag) + 1 : int(_temp_end_tag)]:
+							_temp_content.append(el)
+
+						data_find.append(data[_temp_start_tag] + _temp_content + data[_temp_end_tag])
+				return data_find
+
+			except Exception as e:
+				return e
 
 
 	def get_URL_content(self, url):
+
 		RESPONSE = req.get(f'{self.URI}{url}')
 		MODE = {
 			'text': RESPONSE.text,
 			'content': RESPONSE.content,
 		}
+
 		data = MODE[self.GET_MODE].rstrip().split('\n')
+		data_modified = self.content_modify(arg = data)
+		return data_modified
+
+
+	def get_PATH_content(self, path):
+
+		with open(f'{path}', 'r', encoding='utf-8') as file:
+			RESPONSE = file.read()
+
+		data = RESPONSE.rstrip().split('\n')
 		data_modified = self.content_modify(arg = data)
 		return data_modified
 
