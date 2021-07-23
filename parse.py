@@ -4,120 +4,71 @@
 import requests as req
 
 class Parse:
-	"""
-	Documentation:
-	Example:
-
-	-----------------------------
-	| Parse(method, link, type) |
-	-----------------------------
-	
-	--------
-	method:
-	1. URL
-	2. file:///PATH/to/folder
-	*INPUT ONLY NUMBER IN STRING FORMAT
-	--------
-	link:
-	- file:///PATH/to/folder/filename
-	- C:/PATH/to/folder/filename
-	- /path/to/folder/filename
-	----
-	- https://site.type
-	- site.type
-	--------
-	type:
-	- txt
-	- html
-	- php
-	- py
-	- and other
-	*INPUT WITHOUT '.'(DOT)
-	"""
-
-	def __init__(self, method, link, format):
-
-		if method == "1":
-			self.parseUrl(link, format)
-
-		elif method == "2":
-			self.parseUrlFromFile(link, format)
-
-		else:
-			self.out(str("Error: " + method + "Нет такого метода."))
 
 
-	def docs():
-		info = """
-			Documentation:
-			Example:
+	URI = 'https://www.'
 
-			-----------------------------
-			| Parse(method, link, type) |
-			-----------------------------
+
+	def __init__(self, method: str, link: str, EXTENSION = 'txt', GET_MODE = 'text', GET_ARGS = '') -> None:
+
+		self.EXTENSION = EXTENSION
+		self.GET_MODE = GET_MODE
+		self.GET_ARGS = GET_ARGS
+
+		callback_function = {
+			'1': self.get_URL_content,
+			'2': '',
+		}
+		callback_function[method](link)
+
+
+	def content_modify(self, arg):
+		data_modify = list()
+		for el in arg:
+			data_modify.append(el.lstrip().rstrip())
+		return data_modify
+
+
+	def find_component(self, data):
+		if self.GET_ARGS == '':
+			result = '\n'.join(data)
+			return result
+		if type(self.GET_ARGS) == type(str()):
+			pass
+		if type(self.GET_ARGS) == type(list()):
+			args_tag = filter(lambda tag: '#' not in tag and '.' not in tag, self.GET_ARGS)
+			args_starts_lattice = filter(lambda lattice: lattice.startswith('#'), self.GET_ARGS)
+			args_starts_dote = filter(lambda dote: dote.startswith('.'), self.GET_ARGS)
 			
-			--------
-			method:
-			1. URL
-			2. file:///PATH/to/folder
-			*INPUT ONLY NUMBER
-			--------
-			link:
-			- file:///PATH/to/folder
-			- C:/PATH/to/folder
-			- /path/to/folder
-			----
-			- https://site.type
-			- site.type
-			--------
-			type:
-			- txt
-			- html
-			- php
-			- py
-			- and other
-			*INPUT WITHOUT '.'(DOT)
-				"""
-		return info	
+			
+	
+
+	def find_tag(self):
+		data_start_tag = list()
+		data_end_tag = list()
+
+		try:
+			for i in data:
+				if any((f'<{self.GET_ARGS}>', f'<{self.GET_ARGS}')) in i:
+					data_start_tag.append(i)
+				if f'</{self.GET_ARGS}>' in i:
+					data_end_tag.append(i)
+
+		except Exception as e:
+			pass
 
 
-	def out(self, content):
-		return content
+	def get_URL_content(self, url):
+		RESPONSE = req.get(f'{self.URI}{url}')
+		MODE = {
+			'text': RESPONSE.text,
+			'content': RESPONSE.content,
+		}
+		data = MODE[self.GET_MODE].rstrip().split('\n')
+		data_modified = self.content_modify(arg = data)
+		return data_modified
 
 
-	def parseUrl(self, url, format):
-		code = format
-		parseUrl = url
-		isHttp = "https://"
-
-		if isHttp in parseUrl != True:
-			parseUrl = str(isHttp) + str(parseUrl)
-
-		r = req.get("%s" % parseUrl)
-		self.parseHtmlElements(r, code)
 
 
-	def parseUrlFromFile(self, url, format):
-		code = format
-		parseUrlsInFile = url
-		parseUrlsList = list()
-		with open("%s" % parseUrlsInFile, "r") as fileOpen:
-			fileRead = fileOpen.read()
-			parseUrlsList = fileRead.split(" ")
-			parseUrlsList = [line.rstrip("\n") for line in parseUrlsList] 
-		n = 0
-		for link in parseUrlsList:
-			n += 1
-			r = req.get(link)
-			self.parseMoreHtmlElements(r, n, code)
-
-
-	def parseHtmlElements(self, a, b):
-		with open("parseHtmlPage.%s" % b, "w", encoding='utf-8') as fileOpen:
-			fileOpen.write(a.text)
-
-	def parseMoreHtmlElements(self, a, b, c):
-		with open("parseHtmlPage%s.%s" % (b, c), "a", encoding='utf-8') as fileOpen:
-			fileOpen.write(a.text)
-
-print(Parse.docs())
+Parse('1', 'instagram.com/gr_team_boss/?__a=1')
