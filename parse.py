@@ -1,6 +1,7 @@
 #usr/bin/env python
 #-*- coding: utf-8 -*-
 
+from os import link
 import requests as req
 
 class Parse:
@@ -8,92 +9,100 @@ class Parse:
 
 	URI = 'https://www.'
 
+    #  CONSTRUCTOR
+	def __init__(self, GET_MODE = 'text') -> None:
 
-	def __init__(self, method: str, link: str, EXTENSION = 'txt', GET_MODE = 'text') -> None:
-
-		self.EXTENSION = EXTENSION
 		self.GET_MODE = GET_MODE
+
+
+	def call_method(self, method: str, link: str) -> list:
 
 		callback_function = {
 			'1': self.get_URL_content,
 			'2': self.get_PATH_content,
 		}
-		callback_function[method](link)
+		return callback_function[method](url = link)
 
-
-	def content_modify(self, arg):
+    # CONTENT_MODIFY
+	def content_modify(self, arg) -> list:
 		data_modify = list()
 
 		for el in arg:
 			data_modify.append(el.lstrip().rstrip())
 
-		return data_modify			
-	
+		return data_modify
 
-	def find_tag(data, tag):
-		data_tag = list([],[])
+    # FIND_TAG
+	def find_tag(self, data: list, tag: str) -> list:
+		data_tag = list()
+		for num in range(2):
+			data_tag.append(list())
 		data_find = list()
+		data_find_dict = dict()
+		tree = dict()
 
-		if f'</{tag}>' not in data:
+		if any( ( filter(lambda elem: f'<{tag}>' in elem, data), filter(lambda elem: f'<{tag}' in elem, data) ) ):
 
-			try:
+			if bool(filter(lambda elem: f'</{tag}>' in elem, data)) == False:
 
-				for num in range(len(data)):
+				try:
 
-					if f'<{tag}>' in data[num] or f'<{tag}' in data[num]:
-						data_tag[0].append(num)
-						data_tag[1].append(data[num])
+					for num in range(len(data)):
 
-				for element in data_tag[1]:
+						if f'<{tag}' in data[num]:
+							data_tag[0].append(num)
+							data_tag[1].append(data[num])
 
-					if f'<{tag}' in element or f'<{tag}>' in element:
-						_temp_start_tag = data_tag[1].index(element)
+					for num in range(len(data_tag[0])):
 
-					if '>' in element and f'<{tag}' not in element and f'<{tag}>' not in element:
-						_temp_end_tag = data_tag[1].index(element)
+						data_find.append(f'{data[int(data_tag[0][num])]}>')
+						data_find_dict[str(data_tag[0][num])] = f'{data[int(data_tag[0][num])]}>'
+					return data_find
 
-						_temp_content = list()
+				except Exception as e:
+					return e
 
-						for el in data[int(_temp_start_tag) + 1 : int(_temp_end_tag)]:
-							_temp_content.append(el)
+			else:
 
-						data_find.append(data[_temp_start_tag] + _temp_content + data[_temp_end_tag])
-				return data_find
+				try:
 
-			except Exception as e:
-				return e
+					for num in range(len(data)):
 
+						if any(( f'<{tag}' in data[num], f'</{tag}' in data[num] )):
+							data_tag[0].append(num)
+							data_tag[1].append(data[num])
+
+					for num in range(len(data_tag[0])):
+
+						# data_find.append(f'{data[int(data_tag[0][num])]}>')
+						data_find_dict[str(data_tag[0][num])] = f'{data[int(data_tag[0][num])]}>'
+
+					_temp_key = list()
+					def sort(data: dict, tree: dict, count: list, content: list) -> dict:
+						for key, value in data_find_dict.items():
+							if f'<{tag}' in value:
+								for keys in data_find_dict:
+									if f'</{tag}' in data[keys] \
+										and list(data.values()).index(data[keys]) - list(data.values()).index(value) >= 1 \
+										and len(list(filter(lambda elem: keys == elem, count))) == 0 \
+										and len(list(filter(lambda elem: key == elem, tree))) == 0:
+										tree[key] = f'{value} {"> ".join(content[int(key)+1 : int(keys)])}> {data[keys]}'
+										count.append(keys)
+						return tree
+					result = sort(data_find_dict, tree, _temp_key, data)
+					
+					# data_start = list(filter(lambda elem: f'<{tag}' in elem or f'<{tag}>' in elem, data_find))
+					# data_end = list(filter(lambda elem: f'</{tag}>' in elem, data_find))
+					return result
+
+				except Exception as e:
+					return e
 		else:
-
-			try:
-
-				for num in range(len(data)):
-
-					if f'<{tag}>' in data[num] or f'<{tag}' in data[num] or f'</{tag}>' in data[num]:
-						data_tag[0].append(num)
-						data_tag[1].append(data[num])
-
-				for element in data_tag[1]:
-
-					if f'<{tag}' in element or f'<{tag}>' in element:
-						_temp_start_tag = data_tag[1].index(element)
-
-					if f'</{tag}>' in element:
-						_temp_end_tag = data_tag[1].index(element)
-
-						_temp_content = list()
-
-						for el in data[int(_temp_start_tag) + 1 : int(_temp_end_tag)]:
-							_temp_content.append(el)
-
-						data_find.append(data[_temp_start_tag] + _temp_content + data[_temp_end_tag])
-				return data_find
-
-			except Exception as e:
-				return e
+			return 'This tag not found!'
 
 
-	def get_URL_content(self, url):
+    # GET_URL_CONTENT
+	def get_URL_content(self, url) -> list:
 
 		RESPONSE = req.get(f'{self.URI}{url}')
 		MODE = {
@@ -101,12 +110,12 @@ class Parse:
 			'content': RESPONSE.content,
 		}
 
-		data = MODE[self.GET_MODE].rstrip().split('\n')
+		data = MODE[self.GET_MODE].rstrip().split('>')
 		data_modified = self.content_modify(arg = data)
 		return data_modified
 
-
-	def get_PATH_content(self, path):
+    # GET_PATH_CONTENT
+	def get_PATH_content(self, path) -> list:
 
 		with open(f'{path}', 'r', encoding='utf-8') as file:
 			RESPONSE = file.read()
@@ -118,4 +127,7 @@ class Parse:
 
 
 
-Parse('1', 'instagram.com/gr_team_boss/?__a=1')
+parse = Parse().call_method('1', 'instagram.com/gr_team_boss/?__a=1')
+# print(parse)
+tag = Parse().find_tag(parse, 'div')
+print(tag)

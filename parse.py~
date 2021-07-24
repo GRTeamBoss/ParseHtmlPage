@@ -1,0 +1,124 @@
+#usr/bin/env python
+#-*- coding: utf-8 -*-
+
+import requests as req
+
+class Parse:
+
+
+	URI = 'https://www.'
+
+    #  CONSTRUCTOR
+	def __init__(self, method: str, link: str, EXTENSION = 'txt', GET_MODE = 'text') -> None:
+
+		self.EXTENSION = EXTENSION
+		self.GET_MODE = GET_MODE
+
+		callback_function = {
+			'1': self.get_URL_content,
+			'2': self.get_PATH_content,
+		}
+		callback_function[method](link)
+
+    # CONTENT_MODIFY 
+	def content_modify(self, arg):
+		data_modify = list()
+
+		for el in arg:
+			data_modify.append(el.lstrip().rstrip())
+
+		return data_modify			
+	
+    # FIND_TAG
+	def find_tag(data, tag):
+        data_tag = list()
+        for num in range(2):
+            data_tag.append(list())
+        data_find = list()
+
+		if f'</{tag}>' not in data:
+
+			try:
+
+				for num in range(len(data)):
+
+					if f'<{tag}>' in data[num] or f'<{tag}' in data[num]:
+						data_tag[0].append(num)
+						data_tag[1].append(data[num])
+
+				for element in data_tag[1]:
+
+					if f'<{tag}' in element or f'<{tag}>' in element:
+						_temp_start_tag = data_tag[1].index(element)
+
+					if '>' in element and f'<{tag}' not in element and f'<{tag}>' not in element:
+						_temp_end_tag = data_tag[1].index(element)
+
+						_temp_content = list()
+
+						for el in data[int(_temp_start_tag) + 1 : int(_temp_end_tag)]:
+							_temp_content.append(el)
+
+						data_find.append(data[_temp_start_tag] + _temp_content + data[_temp_end_tag])
+				return data_find
+
+			except Exception as e:
+				return e
+
+		else:
+
+			try:
+
+				for num in range(len(data)):
+
+					if f'<{tag}>' in data[num] or f'<{tag}' in data[num] or f'</{tag}>' in data[num]:
+						data_tag[0].append(num)
+						data_tag[1].append(data[num])
+
+				for element in data_tag[1]:
+
+					if f'<{tag}' in element or f'<{tag}>' in element:
+						_temp_start_tag = data_tag[1].index(element)
+
+					if f'</{tag}>' in element:
+						_temp_end_tag = data_tag[1].index(element)
+
+						_temp_content = list()
+
+						for el in data[int(_temp_start_tag) + 1 : int(_temp_end_tag)]:
+							_temp_content.append(el)
+
+						data_find.append(data[_temp_start_tag] + _temp_content + data[_temp_end_tag])
+				return data_find
+
+			except Exception as e:
+				return e
+
+    # GET_URL_CONTENT
+	def get_URL_content(self, url):
+
+		RESPONSE = req.get(f'{self.URI}{url}')
+		MODE = {
+			'text': RESPONSE.text,
+			'content': RESPONSE.content,
+		}
+
+		data = MODE[self.GET_MODE].rstrip().split('\n')
+		data_modified = self.content_modify(arg = data)
+		return data_modified
+
+    # GET_PATH_CONTENT
+	def get_PATH_content(self, path):
+
+		with open(f'{path}', 'r', encoding='utf-8') as file:
+			RESPONSE = file.read()
+
+		data = RESPONSE.rstrip().split('\n')
+		data_modified = self.content_modify(arg = data)
+		return data_modified
+
+
+
+
+parse = Parse('1', 'instagram.com/gr_team_boss/?__a=1')
+print(Parse.find_tag(parse, 'div'))
