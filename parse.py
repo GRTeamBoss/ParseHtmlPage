@@ -1,8 +1,6 @@
 #usr/bin/env python
 #-*- coding: utf-8 -*-
 
-import asyncio as aio
-
 import requests as req
 import websockets
 
