@@ -100,6 +100,74 @@ class Parse:
                         return f"This tag -> '{tag}' not found!"
 
 
+        # FIND CLASS
+        def find_class(self, data: list, className: str | list) -> list:
+            data_find = list()
+            data_class = list()
+            data_class_list = list()
+            for num in range(2):
+                data_class.append(list())
+                data_find.append(list())
+            if type(className) == str:
+                for num in range(len(data)):
+                    if className in data[num]:
+                        data_class[0].append(num)
+                        data_class[1].append(data[num])
+                LIMIT = len(data_class)//2
+                temp_data_class = list(data_class)
+                while len(data_find[1]) < LIMIT:
+                    for num in range(len(temp_data_class[0])):
+                        data_find[0].append(temp_data_class[0][num])
+                        data_find[1].append(temp_data_class[1][num])
+                for num in range(len(data_find[1])):
+                    if num > 0:
+                        for iteration in range(num):
+                            if data_find[0][num][0] < data_find[0][iteration][0]:
+                                data_find[0].insert(iteration, data_find[0][num])
+                                data_find[0].pop(num+1)
+                                data_find[1].insert(iteration, data_find[1][num])
+                                data_find[1].pop(num+1)
+                return data_find[1]
+            elif type(className) == list:
+                for name in className:
+                    data_class[0].clear()
+                    data_class[1].clear()
+                    for num in range(len(data)):
+                        if name in data[num]:
+                            data_class[0].append(num)
+                            data_class[1].append(data[num])
+                    LIMIT = len(data_class)
+                    while len(data_find[1]) < LIMIT:
+                        for num in range(len(data_class[0])):
+                            data_find[0].append(data_class[0][num])
+                            data_find[1].append(data_class[1][num]
+                    for num in range(len(data_find[1])):
+                        if num > 0:
+                            for iteration in range(num):
+                                if data_find[0][num][0] < data_find[0][iteration][0]:
+                                    data_find[0].insert(iteration, data_find[0][num])
+                                    data_find[0].pop(num+1)
+                                    data_find[1].insert(iteration, data_find[1][num])
+                                    data_find[1].pop(num+1)
+                    data_class_list.append(data_find[1])
+                    if len(data_class_list) == len(className):
+                        count_class = 0
+                        success = list()
+                        success = [[]]*(len(className))
+                        for num in range(len(success)):
+                            success[num] = [[]]*(len(max(data_class_list)))
+                        for elem in className:
+                            for path in range(len(data_class_list)):
+                                for element in range(len(data_class_list[path])):
+                                    if elem in data_class_list[path][element]:
+                                        success[count_class][element] = data_class_list[path][element]
+                            count_class += 1
+                        # TODO make sort for class list
+                    else:
+                        pass
+
+
+
         # GET_URL_CONTENT
         def get_URL_content(self, url) -> list:
                 RESPONSE = req.get(f'{self.URI}{url}')
