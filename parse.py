@@ -105,7 +105,7 @@ class Parse:
 
 
         # FIND CLASS
-        def find_class(self, data: list, className) -> list:
+        def find_class(self, data: list, className: str | list) -> list:
             data_find = list()
             data_class = list()
             data_class_list = list()
@@ -141,15 +141,14 @@ class Parse:
                         if name in data[num]:
                             data_class[0].append(num)
                             data_class[1].append(data[num])
-
-                    LIMIT = len(data_class)
+                    LIMIT = len(data_class[0])
 
                     while len(data_find[1]) < LIMIT:
                         for num in range(len(data_class[0])):
                             data_find[0].append(data_class[0][num])
                             data_find[1].append(data_class[1][num]
 
-                    for num in range(LIMIT):
+                    for num in range(len(data_class[0])):
                         if num > 0:
                             for iteration in range(num):
                                 if data_find[0][num][0] < data_find[0][iteration][0]:
@@ -210,4 +209,9 @@ class Parse:
                 RESPONSE = file.read()
             data = RESPONSE.rstrip().split('>')
             data_modified = self.content_modify(arg=data)
-            return data_modified    
+            return data_modified
+
+parse = Parse()
+data = parse.call_method(method=1, link="https://instagram.com/gr_team_boss/?__a=1")
+class_parse = Parse.find_class(data=data, className="btn")
+print(class_parse)
